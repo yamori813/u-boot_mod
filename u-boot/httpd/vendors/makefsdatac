@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
 # Copyright (C) 2016 Piotr Dymacz <piotr@dymacz.pl>
 
@@ -49,10 +49,9 @@ FS_CNT=0
 # Change ASCII to bytes, comma separated
 # (e.g. "0x01, 0x02, 0x03...")
 function ascii_to_bytes() {
-	echo -ne "$1" |\
+	echo -n "$1" |\
 	      od -A n -t x1 |\
-	      tr -d '\r\n' |\
-	      sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g' >> "$FILES_CONTENT_TMP"
+	      sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g' >> "$FILES_CONTENT_TMP"
 }
 
 # $1 -> file path
@@ -75,9 +74,7 @@ function print_data_array() {
 	fi
 
 	# Server type
-	echo "," >> "$FILES_CONTENT_TMP"
 	ascii_to_bytes "Server: uIP/0.9\r\n"
-	echo "," >> "$FILES_CONTENT_TMP"
 
 	# Content
 	case $f_ext in
@@ -85,35 +82,35 @@ function print_data_array() {
 		if [ $HAVE_JAVA -eq 1 ] &&\
 		   [ -e $YUI_PATH ]; then
 			f_content=$(java -jar "$YUI_PATH" --charset utf-8 "$1" |\
-				    od -A n -t x1 | tr -d '\r\n' |\
-				    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+				    od -A n -t x1 |\
+				    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		else
 			f_content=$(cat "$1" | tr -d '\r\n\t' |\
-				    od -A n -t x1 | tr -d '\r\n' |\
-				    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+				    od -A n -t x1 |\
+				    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		fi
 
 		ascii_to_bytes "Content-type: text/css; charset=UTF-8\r\n\r\n"
 		;;
 	png)
-		f_content=$(od -A n -t x1 < "$1" | tr -d '\r\n' |\
-			    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+		f_content=$(od -A n -t x1 < "$1" |\
+			    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		ascii_to_bytes "Content-Type: image/png\r\n\r\n"
 		;;
 	jpg|jpeg)
-		f_content=$(od -A n -t x1 < "$1" | tr -d '\r\n' |\
-			    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+		f_content=$(od -A n -t x1 < "$1" |\
+			    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		ascii_to_bytes "Content-Type: image/jpeg\r\n\r\n"
 		;;
 	gif)
-		f_content=$(od -A n -t x1 < "$1" | tr -d '\r\n' |\
-			    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+		f_content=$(od -A n -t x1 < "$1" |\
+			    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		ascii_to_bytes "Content-Type: image/gif\r\n\r\n"
 		;;
 	htm|html)
 		f_content=$(cat "$1" | tr -d '\t\r\n' |\
-			    od -A n -t x1 | tr -d '\r\n' |\
-			    sed 's/ /0x/;s/ /, 0x/g;s/.\{102\}/&\n/g')
+			    od -A n -t x1 |\
+			    sed 's/^ */0x/;s/ *$/,/;s/  /,0x/g')
 		ascii_to_bytes "Content-type: text/html; charset=UTF-8\r\n\r\n"
 		;;
 	*)
@@ -121,14 +118,12 @@ function print_data_array() {
 		exit 1
 	esac
 
-	echo "," >> "$FILES_CONTENT_TMP"
-
 	# File content
 	echo -ne "/* Page/File content */\n" >> "$FILES_CONTENT_TMP"
 	echo -ne "${f_content}" >> "$FILES_CONTENT_TMP"
 
 	# And close declaration
-	echo -ne ", 0 };\n\n" >> "$FILES_CONTENT_TMP"
+	echo -ne " 0 };\n\n" >> "$FILES_CONTENT_TMP"
 }
 
 # $1 -> file path

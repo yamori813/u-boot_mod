@@ -19,7 +19,9 @@ HOSTOS := $(shell uname -s | tr '[:upper:]' '[:lower:]' | \
 
 ifneq ($(HOSTOS), darwin)
   ifneq ($(HOSTOS), linux)
-    $(error Error! Unsupported host operating system/arch: "$(HOSTOS)-$(HOSTARCH)")
+    ifneq ($(HOSTOS), freebsd)
+      $(error Error! Unsupported host operating system/arch: "$(HOSTOS)-$(HOSTARCH)")
+    endif
   endif
 endif
 
@@ -119,11 +121,12 @@ endef
 define md5_sum
   $(call echo_green,Calculating MD5 sum for the final image...)
 
-  md5sum $(BIN_DIR)/$(call img_name,bin) | \
-         awk '{print $$1}' | \
-         tr -d '\n' > $(BIN_DIR)/$(call img_name).md5
-
-  echo ' *'$(call img_name,bin) >> $(BIN_DIR)/$(call img_name,md5)
+#  md5sum $(BIN_DIR)/$(call img_name,bin) | \
+#         awk '{print $$1}' | \
+#         tr -d '\n' > $(BIN_DIR)/$(call img_name).md5
+#
+#  echo ' *'$(call img_name,bin) >> $(BIN_DIR)/$(call img_name,md5)
+  md5 $(BIN_DIR)/$(call img_name,bin) | sed 's/\/.*\///' > $(BIN_DIR)/$(call img_name).md5
 endef
 
 # $(1): size

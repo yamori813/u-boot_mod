@@ -103,7 +103,7 @@ endef
 # $(1): define name
 # $(2): define value
 define define_add
-  len=$$((5 - ($$(expr length $(1))/8))); \
+  len=$$((5 - ($$(echo $(1) | wc -c)/8))); \
   tab=`printf '%*s' "$$len" | tr ' ' "\t"`; \
   echo -ne "#define $(strip $(1))$${tab}" >> include/config.h; \
   echo -e  '$(strip $(2))' >> include/config.h
